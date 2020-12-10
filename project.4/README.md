@@ -1,5 +1,5 @@
 project 4 
     Simple Android pattern lock
     
-   [demo]
+  demo
    https://codepen.io/sinhooking/pen/MWjjLRO

@@ -7,3 +7,6 @@
 
 4. (Canvas) Android pattern lock App
     - es6 + dom, canvas(2d) api 
+
+5. Weather App
+    - reactjs + openWeatherMap Api

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 20px;
+        }
+
+        .container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        #canvas,
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui>ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #ui>ul>li {
+            display: inline-block;
+            width: 30%;
+            height: 50px;
+            text-align: center;
+            border-radius: 100%;
+            color: #fff;
+            margin-bottom: 24px;
+            border: 1px solid #333;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
+</head>
+
+<body>
+    <div id="desc">
+        <h3>create line pattern</h3>
+        <p>1. click and drag and draw line pattern</p>
+        <p>2. click the mouse right button, is finished</p>
+        <p>3. click the save button</p>
+        
+        <h3>compare line patterns</h3>
+        <p>1. draw before created line pattern</p>
+        <p>2. click the mouse right button, is finished</p>
+        <p>3. click the check button</p>
+    </div>
+    <div class="container">
+        <canvas id="canvas"></canvas>
+        <div id="ui">
+            <ul>
+                <li data-pad="1"></li>
+                <li data-pad="2"></li>
+                <li data-pad="3"></li>
+                <li data-pad="4"></li>
+                <li data-pad="5"></li>
+                <li data-pad="6"></li>
+                <li data-pad="7"></li>
+                <li data-pad="8"></li>
+                <li data-pad="9"></li>
+            </ul>
+        </div>
+    </div>
+    <button id="submit">save</button>
+    <button id="check">check</button>
+    <script>
+        class App {
+            constructor() {
+                this.containerBoundingRect = document.querySelector('.container').getBoundingClientRect();
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.width = this.canvas.clientWidth
+                this.height = this.canvas.clientHeight;
+
+                this.isStart = false;
+                this.buttons = document.querySelectorAll('#ui > ul > li');
+
+                this.checkButton = document.querySelector('#check');
+                this.submitButton = document.querySelector('#submit');
+
+                this.positions = [];
+                this.password = [];
+
+                this.scrollPosition = { x: 0, y: 0 };
+
+                Array
+                    .from(this.buttons)
+                    .map(el => el.addEventListener('click', (e) => {
+                        if (this.isStart === false) {
+                            this.isStart = true;
+                            requestAnimationFrame(this.render);
+                        }
+
+                        this.positions.push({
+                            x: this.scrollPosition.x,
+                            y: this.scrollPosition.y,
+                            key: el.dataset.pad
+                        });
+
+                    }));
+
+
+                window.addEventListener('mousemove', this.grepScrollPosition)
+                    window.addEventListener('resize', this.resize)
+                window.addEventListener('contextmenu', this.stopDraw);
+
+                this.checkButton.addEventListener('click', this.isauthenticatedHandler)
+                this.submitButton.addEventListener('click', this.savePasswordHandler);
+            }
+
+            resize = () => {
+                this.containerBoundingRect = document.querySelector('.container').getBoundingClientRect();
+            }
+
+            grepScrollPosition = (e) => {
+                if (e) {
+                    this.scrollPosition.x = (e.clientX - this.containerBoundingRect.left) * 1.5;
+                    this.scrollPosition.y = (e.clientY - this.containerBoundingRect.top) * 0.75;
+                } else {
+                    return console.error('invalid arguments');
+                }
+            }
+
+            stopDraw = (event) => {
+                if (event) event.preventDefault();
+                this.isStart = false;
+            }
+
+            findKey = item => item.key;
+            isauthenticatedHandler = () => {
+                alert(
+                    (_.isEqual(this.positions.map(this.findKey), this.password.map(this.findKey))) ? 'successed' : 'faild'
+                );
+
+                return this.initData('positions');
+            }
+
+            savePasswordHandler = () => {
+                this.password = [...this.positions];
+                this.initData('positions');
+            }
+
+            initData = (structureName) => {
+                this[structureName] = [];
+            }
+
+            draw = () => {
+                this.ctx.beginPath();
+                if (this.positions.length === 1) {
+                    this.ctx.moveTo(this.positions[0].x, this.positions[0].y);
+                }
+
+                for (let i = 0; i < this.positions.length; i++) {
+                    if (i !== this.positions.length - 1) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(this.positions[i].x, this.positions[i].y);
+                        this.ctx.lineTo(this.positions[i + 1].x, this.positions[i + 1].y);
+                        this.ctx.stroke();
+                    }
+                }
+
+                if (this.isStart) {
+                    this.ctx.lineTo(this.scrollPosition.x, this.scrollPosition.y);
+                    this.ctx.stroke();
+                }
+            }
+
+            render = (timestamp) => {
+                this.ctx.clearRect(0, 0, this.width + 100, this.height + 100)
+                this.draw();
+                window.requestAnimationFrame(this.render);
+            }
+        }
+
+        (
+            () => {
+                new App();
+            }
+        )();
+    </script>
+</body>
+
+</html>
